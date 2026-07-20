@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>社保専用！りざ一郎！</title>
+<title>りざ一郎☻</title>
 <style>
   :root{
     --blue:#2a6fb0;
@@ -100,8 +100,8 @@
   .member-label input{flex:1;border:none;background:transparent;font-size:0.9em;padding:4px 0;outline:none;min-width:0;}
   .member-label .del-member{border:none;background:none;color:var(--gray);cursor:pointer;font-size:0.85em;flex:none;}
   .member-label .del-member:hover{color:#c0392b;}
-  .time-row{position:relative;height:60px;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/24));cursor:crosshair;user-select:none;}
-  .band{position:absolute;top:3px;bottom:3px;border-radius:6px;color:#fff;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-size:28px;line-height:1;font-weight:700;min-width:6px;}
+  .time-row{position:relative;height:60px;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/14));cursor:crosshair;user-select:none;}
+  .band{position:absolute;top:3px;bottom:3px;border-radius:6px;color:#000;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:12pt;line-height:1.2;font-weight:400;min-width:6px;}
   .band.preview{opacity:0.55;pointer-events:none;}
 
   /* modal */
@@ -161,8 +161,11 @@ let rootRef = null;
 let textSaveTimer = null;
 let modalOpen = false;
 
-const DEFAULT_COLORS = ['#4a90d9','#e08b3f','#5cb85c','#c0559a','#d9534f','#4fb0ae'];
-let colorRotIdx = 0;
+const DEFAULT_BAND_COLOR = '#a8dced'; // 新規予定は常にこの水色で統一
+const DAY_START_MIN = 6*60;   // 6:00
+const DAY_END_MIN = 20*60;    // 20:00
+const DAY_TOTAL_MIN = DAY_END_MIN - DAY_START_MIN;
+const SNAP_MIN = 15;
 let clipboardEntry = null; // {label, duration, color} コピー中の予定
 
 let calendarViewDate = new Date();
@@ -189,8 +192,11 @@ function hhmmToMin(hhmm){
   const [h,m] = hhmm.split(':').map(Number);
   return h*60+m;
 }
-function snap5(min){
-  return Math.round(min/5)*5;
+function snap15(min){
+  return Math.round(min/SNAP_MIN)*SNAP_MIN;
+}
+function clampToDay(min){
+  return Math.max(DAY_START_MIN, Math.min(DAY_END_MIN, min));
 }
 
 function defaultState(title){
@@ -292,7 +298,6 @@ function showApp(){
         <button class="primary" id="bulkAddBtn">📅 毎週の予定を一括登録</button>
         <button id="refreshBtn">🔄 最新に更新</button>
         <button onclick="window.print()">🖨 印刷</button>
-        <button class="danger" id="clearBtn">全消去</button>
         <span id="statusMsg" class="status-msg"></span>
       </div>
       <div id="clipboardBar" class="clipboard-bar"></div>
@@ -321,7 +326,6 @@ function showApp(){
   document.getElementById('shareUrl').textContent = location.href;
   document.getElementById('copyLinkBtn').onclick = copyLink;
   document.getElementById('refreshBtn').onclick = ()=>manualRefresh(true);
-  document.getElementById('clearBtn').onclick = clearAll;
   document.getElementById('addMemberBtn').onclick = addMember;
   document.getElementById('bulkAddBtn').onclick = openBulkModal;
 }
@@ -517,17 +521,17 @@ function renderTimeline(){
 
 function rulerTicks(){
   let s = '';
-  for(let h=0; h<=24; h+=2){
-    const leftPct = (h*60/1440*100);
-    const cls = (h%4===0) ? 'tick hour4' : 'tick';
+  for(let h=6; h<=20; h+=1){
+    const leftPct = ((h*60 - DAY_START_MIN)/DAY_TOTAL_MIN*100);
+    const cls = (h%2===0) ? 'tick hour4' : 'tick';
     s += `<div class="${cls}" style="left:${leftPct}%;">${h}:00</div>`;
   }
   return s;
 }
 
 function bandHtml(id, en){
-  const leftPct = (en.start/1440*100);
-  const widthPct = Math.max(0.3, (en.end - en.start)/1440*100);
+  const leftPct = ((en.start - DAY_START_MIN)/DAY_TOTAL_MIN*100);
+  const widthPct = Math.max(0.3, (en.end - en.start)/DAY_TOTAL_MIN*100);
   const tooltip = `${en.label || '(内容未入力)'}\n${minToHHMM(en.start)}〜${minToHHMM(en.end)}`;
   return `<div class="band" data-entry="${id}" title="${escapeHtml(tooltip)}" style="left:${leftPct}%;width:${widthPct}%;background:${escapeHtml(en.color)};">${escapeHtml(en.label || '')}</div>`;
 }
@@ -535,7 +539,7 @@ function bandHtml(id, en){
 function minFromEvent(rowEl, clientX){
   const rect = rowEl.getBoundingClientRect();
   const ratio = (clientX - rect.left) / rect.width;
-  return snap5(Math.max(0, Math.min(1440, ratio*1440)));
+  return snap15(clampToDay(DAY_START_MIN + ratio*DAY_TOTAL_MIN));
 }
 
 function attachRowInteraction(rowEl){
@@ -554,9 +558,9 @@ function attachRowInteraction(rowEl){
     startMin = minFromEvent(rowEl, e.clientX);
     previewEl = document.createElement('div');
     previewEl.className = 'band preview';
-    previewEl.style.left = (startMin/1440*100) + '%';
+    previewEl.style.left = ((startMin - DAY_START_MIN)/DAY_TOTAL_MIN*100) + '%';
     previewEl.style.width = '4px';
-    previewEl.style.background = DEFAULT_COLORS[colorRotIdx % DEFAULT_COLORS.length];
+    previewEl.style.background = DEFAULT_BAND_COLOR;
     rowEl.appendChild(previewEl);
   });
 
@@ -565,8 +569,8 @@ function attachRowInteraction(rowEl){
     const curMin = minFromEvent(rowEl, e.clientX);
     const lo = Math.min(startMin, curMin);
     const hi = Math.max(startMin, curMin);
-    previewEl.style.left = (lo/1440*100) + '%';
-    previewEl.style.width = Math.max(0.3,(hi-lo)/1440*100) + '%';
+    previewEl.style.left = ((lo - DAY_START_MIN)/DAY_TOTAL_MIN*100) + '%';
+    previewEl.style.width = Math.max(0.3,(hi-lo)/DAY_TOTAL_MIN*100) + '%';
     previewEl.dataset.lo = lo;
     previewEl.dataset.hi = hi;
   });
@@ -577,11 +581,9 @@ function attachRowInteraction(rowEl){
     const curMin = minFromEvent(rowEl, e.clientX);
     let lo = Math.min(startMin, curMin);
     let hi = Math.max(startMin, curMin);
-    if(hi - lo < 15) hi = Math.min(1440, lo + 30); // 最小30分
+    if(hi - lo < SNAP_MIN) hi = Math.min(DAY_END_MIN, lo + SNAP_MIN); // 最小15分
     if(previewEl){ previewEl.remove(); previewEl = null; }
-    const color = DEFAULT_COLORS[colorRotIdx % DEFAULT_COLORS.length];
-    colorRotIdx++;
-    openCreateModal(rowEl.dataset.member, lo, hi, color);
+    openCreateModal(rowEl.dataset.member, lo, hi, DEFAULT_BAND_COLOR);
   });
 }
 
@@ -653,8 +655,8 @@ function openEditModal(entryId){
 function pasteAt(memberId, startMin){
   if(!clipboardEntry) return;
   let start = startMin;
-  let end = Math.min(1440, start + clipboardEntry.duration);
-  if(end - start < clipboardEntry.duration) start = Math.max(0, end - clipboardEntry.duration);
+  let end = Math.min(DAY_END_MIN, start + clipboardEntry.duration);
+  if(end - start < clipboardEntry.duration) start = Math.max(DAY_START_MIN, end - clipboardEntry.duration);
   const entryId = uid();
   const entry = {memberId, start, end, label: clipboardEntry.label, color: clipboardEntry.color};
   if(!state.days[selectedDate]) state.days[selectedDate] = {entries:{}};
@@ -697,9 +699,9 @@ function showModal(opts){
       <div class="modal-row">
         <label>時間帯</label>
         <div class="time-pair">
-          <input type="time" id="modalStart" step="300" value="${minToHHMM(opts.start)}">
+          <input type="time" id="modalStart" step="900" min="06:00" max="20:00" value="${minToHHMM(opts.start)}">
           <span>〜</span>
-          <input type="time" id="modalEnd" step="300" value="${minToHHMM(opts.end)}">
+          <input type="time" id="modalEnd" step="900" min="06:00" max="20:00" value="${minToHHMM(opts.end)}">
         </div>
       </div>
       <div class="modal-row">
@@ -727,9 +729,9 @@ function showModal(opts){
   }
   document.getElementById('modalSave').onclick = ()=>{
     const label = document.getElementById('modalLabel').value.trim();
-    let start = snap5(hhmmToMin(document.getElementById('modalStart').value));
-    let end = snap5(hhmmToMin(document.getElementById('modalEnd').value));
-    if(end <= start) end = Math.min(1440, start + 30);
+    let start = snap15(clampToDay(hhmmToMin(document.getElementById('modalStart').value)));
+    let end = snap15(clampToDay(hhmmToMin(document.getElementById('modalEnd').value)));
+    if(end <= start) end = Math.min(DAY_END_MIN, start + SNAP_MIN);
     const color = document.getElementById('modalColor').value;
     opts.onSave({label, start, end, color});
     close();
@@ -774,9 +776,9 @@ function openBulkModal(){
       <div class="modal-row">
         <label>時間帯</label>
         <div class="time-pair">
-          <input type="time" id="bulkStart" step="300" value="09:00">
+          <input type="time" id="bulkStart" step="900" min="06:00" max="20:00" value="09:00">
           <span>〜</span>
-          <input type="time" id="bulkEnd" step="300" value="10:00">
+          <input type="time" id="bulkEnd" step="900" min="06:00" max="20:00" value="10:00">
         </div>
       </div>
       <div class="modal-row">
@@ -785,7 +787,7 @@ function openBulkModal(){
       </div>
       <div class="modal-row">
         <label>色</label>
-        <input type="color" id="bulkColor" value="${DEFAULT_COLORS[colorRotIdx % DEFAULT_COLORS.length]}">
+        <input type="color" id="bulkColor" value="${DEFAULT_BAND_COLOR}">
       </div>
       <div class="modal-row">
         <label>期間</label>
@@ -811,9 +813,9 @@ function openBulkModal(){
     const memberId = document.getElementById('bulkMember').value;
     const checkedWds = Array.from(backdrop.querySelectorAll('.weekday-picker input:checked')).map(el=>Number(el.value));
     if(checkedWds.length === 0){ alert('曜日を1つ以上選んでください。'); return; }
-    let start = snap5(hhmmToMin(document.getElementById('bulkStart').value));
-    let end = snap5(hhmmToMin(document.getElementById('bulkEnd').value));
-    if(end <= start) end = Math.min(1440, start + 30);
+    let start = snap15(clampToDay(hhmmToMin(document.getElementById('bulkStart').value)));
+    let end = snap15(clampToDay(hhmmToMin(document.getElementById('bulkEnd').value)));
+    if(end <= start) end = Math.min(DAY_END_MIN, start + SNAP_MIN);
     const label = document.getElementById('bulkLabel').value.trim();
     const color = document.getElementById('bulkColor').value;
     const fromStr = document.getElementById('bulkFrom').value;
@@ -846,17 +848,6 @@ function openBulkModal(){
     renderCalendar();
     close();
   };
-}
-
-function clearAll(){
-  if(!confirm('この予約表のすべてのデータを消去します。よろしいですか？（メンバー・予定がすべて削除されます）')) return;
-  const fresh = defaultState(state.title);
-  state.members = fresh.members;
-  state.days = fresh.days;
-  rootRef.update({members: fresh.members, days: null})
-    .then(()=> setSyncStatus('保存しました ' + nowTimeLabel()))
-    .catch(()=> setSyncStatus('⚠️ 保存に失敗しました'));
-  render();
 }
 
 // ---------- SYNC ----------
@@ -948,3 +939,4 @@ init();
 </script>
 </body>
 </html>
+
