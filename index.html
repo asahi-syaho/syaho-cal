@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>りざ一郎の予約表～社保～</title>
+<title>予約表</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@700&amp;display=swap" rel="stylesheet">
@@ -136,6 +136,8 @@
   .member-label .del-member{border:none;background:none;color:var(--gray);cursor:pointer;font-size:0.85em;flex:none;}
   .member-label .del-member:hover{color:#c0392b;}
   .time-row{display:table-cell;position:relative;height:60px;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/14));cursor:crosshair;user-select:none;}
+  .item-grid .time-row{height:20px;}
+  .item-grid .band{top:1px;bottom:1px;font-size:9pt;}
   .band{position:absolute;top:3px;bottom:3px;border-radius:6px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-family:'BIZ UDPGothic',"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:12pt;line-height:1.2;font-weight:700;min-width:6px;color:#fff;-webkit-text-stroke:1px #000;paint-order:stroke fill;text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 2px #000;}
   .band.preview{opacity:0.55;pointer-events:none;}
 
@@ -161,15 +163,21 @@
   @page{ size: landscape; margin: 10mm; }
   @media print{
     *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-    .toolbar,.memo,.footer-note,.link-box,.sidebar,.del-member,.view-tabs,.no-print,.logo-header,.title-input{display:none !important;}
-    .print-context{display:block !important;font-weight:bold;font-size:1.05em;margin-bottom:8px;color:#000;}
+    .toolbar,.memo,.footer-note,.link-box,.sidebar,.del-member,.view-tabs,.no-print,.logo-header,.title-input,.no-print-card{display:none !important;}
+    .print-context{display:block !important;font-weight:bold;font-size:1.05em;margin-bottom:4px;color:#000;}
     body{background:#fff;padding:0;}
-    .card{box-shadow:none;border:none;}
+    .wrap{max-width:none;margin:0;}
+    .card{box-shadow:none;border:none;padding:0;margin-bottom:0;}
     .timeline-outer{border:none;}
     .timeline-grid, .item-grid{width:100% !important;}
     .month-cal-grid{width:100%;}
     .month-day{break-inside:avoid;page-break-inside:avoid;}
     .tl-row{break-inside:avoid;page-break-inside:avoid;}
+    .date-title{margin-bottom:4px;}
+    .item-view-header{margin-bottom:4px;}
+    .item-grid .time-row{height:16px;}
+    .item-grid .band{top:0.5px;bottom:0.5px;font-size:7.5pt;-webkit-text-stroke:0.6px #000;}
+    .ruler{height:20px;}
   }
   @media (max-width:820px){
     .layout{flex-direction:column;}
@@ -330,7 +338,7 @@ function showLoadError(){
 function showApp(){
   app.innerHTML = `
     ${logoHeaderHtml()}
-    <div class="card">
+    <div class="card no-print-card">
       <input id="scheduleTitle" class="title-input" placeholder="予約表のタイトル">
       <textarea id="memo" class="memo" placeholder="連絡事項・注意書きなどをここに（任意）"></textarea>
     </div>
