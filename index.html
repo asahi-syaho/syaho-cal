@@ -151,10 +151,12 @@
   .member-label .del-member:hover{color:#c0392b;}
   .time-row{display:table-cell;position:relative;height:60px;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/14));cursor:crosshair;user-select:none;}
   .item-grid .time-row{height:20px;}
+  .item-grid .time-row.wsun{background-color:var(--sun-bg);}
+  .item-grid .time-row.wsat{background-color:var(--sat-bg);}
   .item-grid .band{top:1px;bottom:1px;font-size:9pt;}
   .item-grid.all-mode .time-row{height:34px;}
   .item-grid.all-mode .band{font-size:8pt;top:2px;bottom:2px;}
-  .band{position:absolute;top:3px;bottom:3px;border-radius:6px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-family:'BIZ UDPGothic',"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:12pt;line-height:1.2;font-weight:700;min-width:6px;color:#fff;-webkit-text-stroke:1px #000;paint-order:stroke fill;text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 2px #000;}
+  .band{position:absolute;top:3px;bottom:3px;border-radius:6px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-family:'BIZ UDPGothic',"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:12pt;line-height:1.2;font-weight:700;min-width:6px;color:#000;}
   .band.preview{opacity:0.55;pointer-events:none;}
 
   /* modal */
@@ -193,7 +195,7 @@
     .item-view-header{margin-bottom:4px;}
     .item-grid .time-row{height:16px;}
     .item-grid.all-mode .time-row{height:22px;}
-    .item-grid .band{top:0.5px;bottom:0.5px;font-size:7.5pt;-webkit-text-stroke:0.6px #000;}
+    .item-grid .band{top:0.5px;bottom:0.5px;font-size:7.5pt;}
     .item-grid.all-mode .band{font-size:6.5pt;}
     .ruler{height:20px;}
   }
@@ -788,16 +790,17 @@ function renderItemMonthView(){
     const dateStr = toDateStr(d);
     const wd = d.getDay();
     let labelCls = 'item-date-label';
+    let rowWdCls = '';
     if(dateStr === todayStr) labelCls += ' today';
-    else if(wd === 0) labelCls += ' wsun';
-    else if(wd === 6) labelCls += ' wsat';
+    else if(wd === 0){ labelCls += ' wsun'; rowWdCls = ' wsun'; }
+    else if(wd === 6){ labelCls += ' wsat'; rowWdCls = ' wsat'; }
     let row = `<div class="tl-row"><div class="${labelCls}" data-date="${dateStr}">${m+1}/${dnum}(${wdLabels[wd]})</div>`;
 
     const day = state.days[dateStr];
     let entries = day ? Object.entries(day.entries || {}) : [];
     if(!isAll) entries = entries.filter(([id,en])=> en.memberId === memberId);
     const rowMemberAttr = isAll ? ALL_MEMBERS : memberId;
-    row += `<div class="time-row" data-member="${rowMemberAttr}" data-date="${dateStr}">`;
+    row += `<div class="time-row${rowWdCls}" data-member="${rowMemberAttr}" data-date="${dateStr}">`;
     entries.forEach(([id,en])=>{
       if(isAll){
         const memName = (state.members[en.memberId] && state.members[en.memberId].name) || '';
