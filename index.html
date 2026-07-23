@@ -6,7 +6,7 @@
 <title>🐱りざ一郎🐱～みんなの予定表～</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@700&display=swap" rel="stylesheet">
 <style>
   :root{
     --blue:#2a6fb0;
@@ -14,6 +14,10 @@
     --border:#d7dde3;
     --gray:#6b7480;
     --today:#ffb400;
+    --sat-bg:#eaf2ff;
+    --sun-bg:#ffecec;
+    --sat-text:#2a6fb0;
+    --sun-text:#c0392b;
   }
   *{box-sizing:border-box;}
   body{
@@ -77,9 +81,13 @@
   .cal-nav{border:none;background:none;color:var(--blue);cursor:pointer;font-size:1.1em;padding:2px 8px;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:0.8em;}
   .cal-grid .wd{color:var(--gray);padding:4px 0;font-size:0.78em;}
+  .cal-grid .wd:nth-child(1){color:var(--sun-text);}
+  .cal-grid .wd:nth-child(7){color:var(--sat-text);}
   .cal-day{position:relative;padding:6px 0;border-radius:6px;cursor:pointer;border:1px solid transparent;}
   .cal-day:hover{background:var(--blue-light);}
   .cal-day.other-month{color:#c3cad2;}
+  .cal-day.wsun{background:var(--sun-bg);}
+  .cal-day.wsat{background:var(--sat-bg);}
   .cal-day.today{border-color:var(--today);font-weight:bold;}
   .cal-day.selected{background:var(--blue);color:#fff;}
   .cal-day .dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--blue);}
@@ -105,25 +113,31 @@
   .item-grid .corner{width:110px;}
   .item-date-label{display:table-cell;vertical-align:middle;width:110px;background:#fff;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 8px;font-size:0.8em;white-space:nowrap;}
   .item-date-label.today{color:var(--today);font-weight:bold;}
-  .item-date-label.wsun{color:#c0392b;}
-  .item-date-label.wsat{color:#2a6fb0;}
+  .item-date-label.wsun{color:var(--sun-text);background:var(--sun-bg);}
+  .item-date-label.wsat{color:var(--sat-text);background:var(--sat-bg);}
 
   /* month calendar (main view) */
   .month-cal-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .month-cal-header .label{font-weight:bold;font-size:1.1em;min-width:8em;text-align:center;}
   .month-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--border);border-left:1px solid var(--border);}
   .month-cal-grid .wd{background:var(--blue-light);text-align:center;font-size:0.78em;color:var(--gray);padding:6px 0;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .month-cal-grid .wd:nth-child(1){color:var(--sun-text);}
+  .month-cal-grid .wd:nth-child(7){color:var(--sat-text);}
   .month-day{min-height:100px;min-width:0;overflow:hidden;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;cursor:pointer;vertical-align:top;}
   .month-day:hover{background:#f7fafd;}
   .month-day .mnum{font-size:0.8em;color:var(--gray);margin-bottom:3px;}
   .month-day.other-month{background:#fafbfc;}
   .month-day.other-month .mnum{color:#c3cad2;}
+  .month-day.wsun{background:var(--sun-bg);}
+  .month-day.wsat{background:var(--sat-bg);}
   .month-day.today .mnum{color:var(--today);font-weight:bold;}
   .month-entry{font-size:0.72em;color:#000;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;}
   .month-entry:hover{outline:1px solid rgba(0,0,0,0.3);}
 
   /* timeline */
   .date-title{font-size:1.05em;font-weight:bold;margin-bottom:10px;color:var(--blue);}
+  .date-title.date-title-sun{color:var(--sun-text);background:var(--sun-bg);display:inline-block;padding:2px 12px;border-radius:6px;}
+  .date-title.date-title-sat{color:var(--sat-text);background:var(--sat-bg);display:inline-block;padding:2px 12px;border-radius:6px;}
   .timeline-outer{overflow:hidden;border:1px solid var(--border);border-radius:8px;width:100%;}
   .timeline-grid{display:table;width:100%;table-layout:fixed;border-collapse:collapse;}
   .tl-row{display:table-row;}
@@ -138,6 +152,8 @@
   .time-row{display:table-cell;position:relative;height:60px;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/14));cursor:crosshair;user-select:none;}
   .item-grid .time-row{height:20px;}
   .item-grid .band{top:1px;bottom:1px;font-size:9pt;}
+  .item-grid.all-mode .time-row{height:34px;}
+  .item-grid.all-mode .band{font-size:8pt;top:2px;bottom:2px;}
   .band{position:absolute;top:3px;bottom:3px;border-radius:6px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);display:flex;align-items:center;font-family:'BIZ UDPGothic',"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:12pt;line-height:1.2;font-weight:700;min-width:6px;color:#fff;-webkit-text-stroke:1px #000;paint-order:stroke fill;text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 2px #000;}
   .band.preview{opacity:0.55;pointer-events:none;}
 
@@ -176,7 +192,9 @@
     .date-title{margin-bottom:4px;}
     .item-view-header{margin-bottom:4px;}
     .item-grid .time-row{height:16px;}
+    .item-grid.all-mode .time-row{height:22px;}
     .item-grid .band{top:0.5px;bottom:0.5px;font-size:7.5pt;-webkit-text-stroke:0.6px #000;}
+    .item-grid.all-mode .band{font-size:6.5pt;}
     .ruler{height:20px;}
   }
   @media (max-width:820px){
@@ -214,6 +232,7 @@ let textSaveTimer = null;
 let modalOpen = false;
 
 const DEFAULT_BAND_COLOR = '#a8dced'; // 新規予定は常にこの水色で統一
+const ALL_MEMBERS = '__all__'; // 「メンバー全員」を表す特別なID
 const DAY_START_MIN = 6*60;   // 6:00
 const DAY_END_MIN = 20*60;    // 20:00
 const DAY_TOTAL_MIN = DAY_END_MIN - DAY_START_MIN;
@@ -425,6 +444,7 @@ function renderMain(){
 
 function ensureFocusedMember(){
   const ids = Object.keys(state.members);
+  if(focusedMemberId === ALL_MEMBERS) return; // 「全員」選択はそのまま維持
   if(!focusedMemberId || !state.members[focusedMemberId]){
     focusedMemberId = ids.length ? ids[0] : null;
   }
@@ -491,8 +511,11 @@ function renderCalDay(d, otherMonth, todayStr){
   const dateStr = toDateStr(d);
   const dayEntries = state.days[dateStr] && state.days[dateStr].entries;
   const hasEntries = dayEntries && Object.keys(dayEntries).length>0;
+  const wd = d.getDay();
   let cls = 'cal-day';
   if(otherMonth) cls += ' other-month';
+  if(wd === 0) cls += ' wsun';
+  if(wd === 6) cls += ' wsat';
   if(dateStr === todayStr) cls += ' today';
   if(dateStr === selectedDate) cls += ' selected';
   return `<div class="${cls}" data-date="${dateStr}">${d.getDate()}${hasEntries?'<span class="dot"></span>':''}</div>`;
@@ -562,8 +585,13 @@ function addMember(){
 
 function renderTimelineView(){
   const mc = document.getElementById('mainContent');
+  const d = new Date(selectedDate + 'T00:00:00');
+  const wd = d.getDay();
+  let dtCls = 'date-title';
+  if(wd === 0) dtCls += ' date-title-sun';
+  if(wd === 6) dtCls += ' date-title-sat';
   mc.innerHTML = `
-    <div class="date-title" id="dateTitle"></div>
+    <div class="${dtCls}" id="dateTitle"></div>
     <div class="timeline-outer">
       <div class="timeline-grid" id="timelineGrid"></div>
     </div>
@@ -572,8 +600,7 @@ function renderTimelineView(){
       ※URLを知っている人は誰でも編集できます。他の人の変更は自動で反映されます。
     </div>
   `;
-  const d = new Date(selectedDate + 'T00:00:00');
-  document.getElementById('dateTitle').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 (${['日','月','火','水','木','金','土'][d.getDay()]})`;
+  document.getElementById('dateTitle').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 (${['日','月','火','水','木','金','土'][wd]})`;
 
   let html = '';
   html += `<div class="tl-row"><div class="corner"></div><div class="ruler">${rulerTicks()}</div></div>`;
@@ -610,10 +637,12 @@ function renderTimelineView(){
 // ---- calendar view (main, monthly overview) ----
 
 function memberSelectHtml(selectId){
+  const allSelected = focusedMemberId === ALL_MEMBERS ? 'selected' : '';
+  const allOpt = `<option value="${ALL_MEMBERS}" ${allSelected}>👥 メンバー全員</option>`;
   const opts = Object.entries(state.members).map(([mid,mem])=>
     `<option value="${mid}" ${mid===focusedMemberId?'selected':''}>${escapeHtml(mem.name)}</option>`
   ).join('');
-  return `<select id="${selectId}" class="member-select no-print">${opts}</select>`;
+  return `<select id="${selectId}" class="member-select no-print">${allOpt}${opts}</select>`;
 }
 
 function renderCalendarMonthView(){
@@ -622,6 +651,8 @@ function renderCalendarMonthView(){
     mc.innerHTML = `<div class="footer-note">先にメンバーを追加してください。</div>`;
     return;
   }
+  const isAll = focusedMemberId === ALL_MEMBERS;
+  const filterMemberId = isAll ? null : focusedMemberId;
   const y = calendarViewDate.getFullYear();
   const m = calendarViewDate.getMonth();
   const first = new Date(y, m, 1);
@@ -634,16 +665,18 @@ function renderCalendarMonthView(){
 
   for(let i=0;i<startOffset;i++){
     const d = new Date(y, m, 1-(startOffset-i));
-    cells += monthDayHtml(d, true, todayStr, focusedMemberId);
+    cells += monthDayHtml(d, true, todayStr, filterMemberId);
   }
   for(let d=1; d<=daysInMonth; d++){
-    cells += monthDayHtml(new Date(y,m,d), false, todayStr, focusedMemberId);
+    cells += monthDayHtml(new Date(y,m,d), false, todayStr, filterMemberId);
   }
   const totalCells = startOffset + daysInMonth;
   const trailing = (7 - (totalCells % 7)) % 7;
   for(let i=1;i<=trailing;i++){
-    cells += monthDayHtml(new Date(y,m+1,i), true, todayStr, focusedMemberId);
+    cells += monthDayHtml(new Date(y,m+1,i), true, todayStr, filterMemberId);
   }
+
+  const headerName = isAll ? '全員' : escapeHtml((state.members[focusedMemberId]||{}).name || '');
 
   mc.innerHTML = `
     <div class="month-cal-header">
@@ -653,11 +686,11 @@ function renderCalendarMonthView(){
       <button class="cal-nav no-print" id="mcNext">›</button>
       <button class="small no-print" id="mcToday">今日</button>
     </div>
-    <div class="print-context">${escapeHtml((state.members[focusedMemberId]||{}).name || '')} ／ ${y}年${m+1}月</div>
+    <div class="print-context">${headerName} ／ ${y}年${m+1}月</div>
     <div class="month-cal-grid">${cells}</div>
     <div class="footer-note">
       日付をクリックするとその日の「予定表」表示に切り替わります。予定をクリックすると編集・削除できます。<br>
-      ※選択したメンバー1人分の予定を表示しています。
+      ※「メンバー全員」を選ぶと、全員分の予定をまとめて表示します。
     </div>
   `;
 
@@ -687,8 +720,11 @@ function monthDayHtml(d, otherMonth, todayStr, memberId){
   if(memberId) entries = entries.filter(([id,en])=> en.memberId === memberId);
   entries.sort((a,b)=> a[1].start - b[1].start);
 
+  const wd = d.getDay();
   let cls = 'month-day';
   if(otherMonth) cls += ' other-month';
+  if(wd === 0) cls += ' wsun';
+  if(wd === 6) cls += ' wsat';
   if(dateStr === todayStr) cls += ' today';
 
   const entriesHtml = entries.map(([id,en])=>{
@@ -709,11 +745,13 @@ function renderItemMonthView(){
     return;
   }
   const memberId = focusedMemberId;
+  const isAll = memberId === ALL_MEMBERS;
   const y = calendarViewDate.getFullYear();
   const m = calendarViewDate.getMonth();
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const todayStr = toDateStr(new Date());
   const wdLabels = ['日','月','火','水','木','金','土'];
+  const headerName = isAll ? '全員' : escapeHtml((state.members[memberId]||{}).name || '');
 
   mc.innerHTML = `
     <div class="item-view-header">
@@ -723,13 +761,13 @@ function renderItemMonthView(){
       <button class="cal-nav no-print" id="ivNext">›</button>
       <button class="small no-print" id="ivToday">今日</button>
     </div>
-    <div class="print-context">${escapeHtml((state.members[memberId]||{}).name || '')} ／ ${y}年${m+1}月</div>
+    <div class="print-context">${headerName} ／ ${y}年${m+1}月</div>
     <div class="timeline-outer">
       <div class="item-grid" id="itemGrid"></div>
     </div>
     <div class="footer-note">
       1人のメンバーの1か月分の予定を、日付ごとの帯で表示しています。ドラッグして予定を作成、既存の帯をクリックすると編集・削除できます。<br>
-      ※日付の左の欄をクリックすると、その日の「予定表」表示に切り替わります。
+      ※日付の左の欄をクリックすると、その日の「予定表」表示に切り替わります。「メンバー全員」表示では新規作成はできません（既存の予定の編集・削除は可能です）。
     </div>
   `;
 
@@ -756,21 +794,34 @@ function renderItemMonthView(){
     let row = `<div class="tl-row"><div class="${labelCls}" data-date="${dateStr}">${m+1}/${dnum}(${wdLabels[wd]})</div>`;
 
     const day = state.days[dateStr];
-    const entries = day ? Object.entries(day.entries || {}).filter(([id,en])=> en.memberId === memberId) : [];
-    row += `<div class="time-row" data-member="${memberId}" data-date="${dateStr}">`;
-    entries.forEach(([id,en])=>{ row += bandHtml(id, en); });
+    let entries = day ? Object.entries(day.entries || {}) : [];
+    if(!isAll) entries = entries.filter(([id,en])=> en.memberId === memberId);
+    const rowMemberAttr = isAll ? ALL_MEMBERS : memberId;
+    row += `<div class="time-row" data-member="${rowMemberAttr}" data-date="${dateStr}">`;
+    entries.forEach(([id,en])=>{
+      if(isAll){
+        const memName = (state.members[en.memberId] && state.members[en.memberId].name) || '';
+        const label = memName ? (memName + (en.label ? '：' + en.label : '')) : (en.label || '');
+        row += bandHtml(id, en, label);
+      } else {
+        row += bandHtml(id, en);
+      }
+    });
     row += `</div></div>`;
     html += row;
   }
 
   const grid = document.getElementById('itemGrid');
   grid.innerHTML = html;
+  grid.classList.toggle('all-mode', isAll);
 
   grid.querySelectorAll('.item-date-label[data-date]').forEach(el=>{
     el.addEventListener('click', ()=>{ switchToDate(el.dataset.date); });
   });
   grid.querySelectorAll('.time-row').forEach(rowEl=>{
-    attachRowInteraction(rowEl);
+    if(rowEl.dataset.member && rowEl.dataset.member !== ALL_MEMBERS){
+      attachRowInteraction(rowEl);
+    }
   });
   grid.querySelectorAll('.band').forEach(bandEl=>{
     bandEl.addEventListener('pointerdown', e=> e.stopPropagation());
@@ -792,11 +843,12 @@ function rulerTicks(){
   return s;
 }
 
-function bandHtml(id, en){
+function bandHtml(id, en, displayLabel){
   const leftPct = ((en.start - DAY_START_MIN)/DAY_TOTAL_MIN*100);
   const widthPct = Math.max(0.3, (en.end - en.start)/DAY_TOTAL_MIN*100);
-  const tooltip = `${en.label || '(内容未入力)'}\n${minToHHMM(en.start)}〜${minToHHMM(en.end)}`;
-  return `<div class="band" data-entry="${id}" title="${escapeHtml(tooltip)}" style="left:${leftPct}%;width:${widthPct}%;background:${escapeHtml(en.color)};">${escapeHtml(en.label || '')}</div>`;
+  const label = (displayLabel !== undefined) ? displayLabel : (en.label || '');
+  const tooltip = `${label || '(内容未入力)'}\n${minToHHMM(en.start)}〜${minToHHMM(en.end)}`;
+  return `<div class="band" data-entry="${id}" title="${escapeHtml(tooltip)}" style="left:${leftPct}%;width:${widthPct}%;background:${escapeHtml(en.color)};">${escapeHtml(label)}</div>`;
 }
 
 function minFromEvent(rowEl, clientX){
